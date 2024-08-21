@@ -549,7 +549,7 @@ bool vtkArchive::UnZip(const char* zipFileName, const char* destinationDirectory
 
   std::string cwd = vtksys::SystemTools::GetCurrentWorkingDirectory();
 
-#if (VTK_MAJOR_VERSION >= 9 && VTK_MINOR_VERSION >= 0 && VTK_BUILD_VERSION >= 20210806)
+#if (VTK_MAJOR_VERSION >= 9 && VTK_MINOR_VERSION >= 0)
   if ( !vtksys::SystemTools::ChangeDirectory(destinationDirectory) )
 #else
   if ( vtksys::SystemTools::ChangeDirectory(destinationDirectory) )
@@ -662,7 +662,7 @@ bool vtkArchive::UnZip(const char* zipFileName, const char* destinationDirectory
     return false;
   }
 
-#if (VTK_MAJOR_VERSION >= 9 && VTK_MINOR_VERSION >= 0 && VTK_BUILD_VERSION >= 20210806)
+#if (VTK_MAJOR_VERSION >= 9 && VTK_MINOR_VERSION >= 0)
   if ( !vtksys::SystemTools::ChangeDirectory(cwd.c_str()) )
 #else
   if ( vtksys::SystemTools::ChangeDirectory(cwd.c_str()) )

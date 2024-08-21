@@ -10,6 +10,14 @@ foreach(dcmtk_Lib ${DCMTK_LIBRARIES})
     endif()
     install(FILES ${DCMTK_DIR}/bin/${int_dir}${dcmtk_Lib}.dll
       DESTINATION ${Slicer_INSTALL_LIB_DIR} COMPONENT Runtime)
+  elseif(APPLE)
+    install(DIRECTORY ${DCMTK_DIR}/lib/
+            DESTINATION ${Slicer_INSTALL_LIB_DIR} COMPONENT Runtime
+            FILES_MATCHING PATTERN lib${dcmtk_Lib}.dylib*)
+    slicerStripInstalledLibrary(
+            FILES "${Slicer_INSTALL_LIB_DIR}/lib${dcmtk_Lib}.dylib"
+            COMPONENT Runtime
+    )
   elseif(UNIX)
     install(DIRECTORY ${DCMTK_DIR}/lib/
       DESTINATION ${Slicer_INSTALL_LIB_DIR} COMPONENT Runtime

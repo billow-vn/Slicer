@@ -651,6 +651,7 @@ endif()
   find_package(Qt5 COMPONENTS Core QUIET)
   if(Slicer_BUILD_WEBENGINE_SUPPORT)
     list(APPEND Slicer_REQUIRED_QT_MODULES
+      WebEngineCore
       WebEngine
       WebEngineWidgets
       WebChannel
@@ -696,7 +697,7 @@ include(SlicerBlockFindQtAndCheckVersion)
   mark_as_superbuild(VARS Qt5_DIR LABELS "FIND_PACKAGE")
 
 set(Slicer_HAVE_QT5 1)
-    set(Slicer_HAVE_WEBKIT_SUPPORT 0)
+    set(Slicer_HAVE_WEBKIT_SUPPORT 1)
 
 #
 # If qmake or Qt5Config are associated with a system location, explicitly mark Qt as such. Doing so
@@ -713,6 +714,8 @@ set(Slicer_HAVE_QT5 1)
       "/usr/local/lib/"
       # homebrew
       "/usr/local/Cellar/lib/"
+      "/opt/homebrew/Cellar/lib/"
+      "/opt/homebrew/lib/"
       # macport
       "/opt/lib"
       "/opt/local/lib"
@@ -963,6 +966,14 @@ if(Slicer_USE_PYTHONQT)
 
   # See vtkAddon/CMake/vtkMacroKitPythonWrap.cmake
   set(Slicer_VTK_WRAP_HIERARCHY_DIR ${Slicer_BINARY_DIR})
+endif()
+
+#-----------------------------------------------------------------------------
+# DCMTK
+#-----------------------------------------------------------------------------
+if(Slicer_BUILD_DICOM_SUPPORT)
+  find_package(DCMTK REQUIRED)
+  link_directories(${DCMTK_DIR}/lib)
 endif()
 
 #-----------------------------------------------------------------------------

@@ -89,7 +89,7 @@ function(ExternalProject_FindPythonPackage)
     if(NOT DEFINED PYTHON_EXECUTABLE)
       find_package(PythonInterp REQUIRED)
     endif()
-    set(MY_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
+    set(MY_PYTHON_EXECUTABLE ${slicer_PYTHON_REAL_EXECUTABLE})
     if(NOT EXISTS "${MY_PYTHON_EXECUTABLE}")
       if(MY_REQUIRED)
         message(FATAL_ERROR "Could not find Python interpreter for required dependency ${MY_MODULE_NAME}. Path '${MY_PYTHON_EXECUTABLE}' corresponds to a nonexistent file.")
@@ -102,7 +102,7 @@ function(ExternalProject_FindPythonPackage)
 
   # Check if module can be imported
   execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "import ${MY_MODULE_NAME}"
+    COMMAND ${slicer_PYTHON_REAL_EXECUTABLE} -c "import ${MY_MODULE_NAME}"
     RESULT_VARIABLE _process_status
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
@@ -118,7 +118,7 @@ function(ExternalProject_FindPythonPackage)
   # Get path
   execute_process(
     COMMAND
-      ${PYTHON_EXECUTABLE} -c
+      ${slicer_PYTHON_REAL_EXECUTABLE} -c
         "import ${MY_MODULE_NAME}; print(${MY_MODULE_NAME}.__file__)"
     RESULT_VARIABLE _process_status
     OUTPUT_VARIABLE _process_output
@@ -135,7 +135,7 @@ function(ExternalProject_FindPythonPackage)
   if(NOT MY_NO_VERSION_PROPERTY)
     execute_process(
       COMMAND
-        ${PYTHON_EXECUTABLE} -c
+        ${slicer_PYTHON_REAL_EXECUTABLE} -c
           "import ${MY_MODULE_NAME}; print(${MY_MODULE_NAME}.${MY_VERSION_PROPERTY})"
       RESULT_VARIABLE _process_status
       OUTPUT_VARIABLE _process_output

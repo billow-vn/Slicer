@@ -9,7 +9,9 @@ ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj
 
 if(Slicer_USE_SYSTEM_${proj})
   unset(LibFFI_INCLUDE_DIR CACHE)
-  find_path(LibFFI_INCLUDE_DIR ffi.h)
+  find_path(LibFFI_INCLUDE_DIR ffi.h
+    PATH_SUFFIXES include include/ffi
+  )
 
   unset(LibFFI_LIBRARY CACHE)
   find_library(LibFFI_LIBRARY NAMES ffi libffi)

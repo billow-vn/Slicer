@@ -4,6 +4,10 @@ set(proj SlicerExecutionModel)
 # Set dependency list
 set(${proj}_DEPENDENCIES ${ITK_EXTERNAL_NAME})
 
+if(Slicer_BUILD_DICOM_SUPPORT)
+  list(APPEND Slicer_DEPENDENCIES DCMTK)
+endif()
+
 if(Slicer_USE_TBB)
   list(APPEND ${proj}_DEPENDENCIES tbb)
 endif()

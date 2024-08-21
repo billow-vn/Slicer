@@ -55,7 +55,7 @@ class SlicerDICOMBrowser(VTKObservationMixin, qt.QWidget):
 
         # Add ctkVisualDICOMBrowser
         self.dicomVisualBrowser = ctk.ctkDICOMVisualBrowserWidget()
-        self.dicomVisualBrowser.findChild(ctk.ctkCollapsibleGroupBox, "ActionsCollapsibleGroupBox").hide()
+        self.dicomVisualBrowser.findChild(ctk.ctkCollapsibleGroupBox, "CollapsibleGroupBox").hide()
         if settingsValue("DICOM/thumbnailsSize", False) == "large":
             self.dicomVisualBrowser.thumbnailSize = ctk.ctkDICOMStudyItemWidget.Large
         elif settingsValue("DICOM/thumbnailsSize", False) == "medium":

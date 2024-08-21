@@ -3,6 +3,8 @@ include(ListToString)
 
 set(proj python)
 
+cmake_policy(SET CMP0148 OLD)
+
 # Set dependency list
 set(${proj}_DEPENDENCIES "")
 if(NOT Slicer_USE_SYSTEM_python)
@@ -14,6 +16,14 @@ if(NOT Slicer_USE_SYSTEM_python)
     zlib
     sqlite
     )
+else()
+  list(APPEND ${proj}_DEPENDENCIES
+    bzip2
+    CTKAPPLAUNCHER
+    LibFFI
+    LZMA
+    zlib
+  )
 endif()
 if(PYTHON_ENABLE_SSL)
   list(APPEND ${proj}_DEPENDENCIES OpenSSL)
@@ -43,6 +53,7 @@ if(Slicer_USE_SYSTEM_${proj})
   set(PYTHON_INCLUDE_DIR ${PYTHON_INCLUDE_DIRS})
   set(PYTHON_LIBRARY ${PYTHON_LIBRARIES})
   set(PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
+  set(PYTHON_REAL_EXECUTABLE ${PYTHON_EXECUTABLE})
 endif()
 
 if((NOT DEFINED PYTHON_INCLUDE_DIR
@@ -53,6 +64,14 @@ if((NOT DEFINED PYTHON_INCLUDE_DIR
 
   set(_download_3.9.10_url "https://www.python.org/ftp/python/3.9.10/Python-3.9.10.tgz")
   set(_download_3.9.10_md5 "1440acb71471e2394befdb30b1a958d1")
+  set(_download_3.9.18_url "https://www.python.org/ftp/python/3.9.18/Python-3.9.18.tgz")
+  set(_download_3.9.18_md5 "c3a3e67e35838cadca247237a5a279a7")
+  set(_download_3.10.12_url "https://www.python.org/ftp/python/3.10.12/Python-3.10.12.tgz")
+  set(_download_3.10.12_md5 "1d64320e0b0df6e9ab7e611bacb2178d")
+  set(_download_3.10.13_url "https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz")
+  set(_download_3.10.13_md5 "cbcad7f5e759176bf8ce8a5f9d487087")
+  set(_download_3.11.7_url "https://www.python.org/ftp/python/3.11.7/Python-3.11.7.tgz")
+  set(_download_3.11.7_md5 "ef61f81ec82c490484219c7f0ec96783")
 
   set(EXTERNAL_PROJECT_OPTIONAL_ARGS)
   if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
@@ -183,6 +202,10 @@ if((NOT DEFINED PYTHON_INCLUDE_DIR
     DEPENDS
       python-source ${${proj}_DEPENDENCIES}
     )
+else()
+
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
   set(python_DIR ${CMAKE_BINARY_DIR}/${proj}-install)
 
   if(UNIX)
@@ -194,18 +217,18 @@ if((NOT DEFINED PYTHON_INCLUDE_DIR
     set(PYTHON_INCLUDE_DIR ${python_DIR}/include/python${Slicer_REQUIRED_PYTHON_VERSION_DOT}${Slicer_REQUIRED_PYTHON_ABIFLAGS})
     set(PYTHON_LIBRARY ${python_DIR}/lib/libpython${Slicer_REQUIRED_PYTHON_VERSION_DOT}${Slicer_REQUIRED_PYTHON_ABIFLAGS}.${python_IMPORT_SUFFIX})
     set(PYTHON_EXECUTABLE ${python_DIR}/bin/PythonSlicer)
-    set(slicer_PYTHON_REAL_EXECUTABLE ${python_DIR}/bin/python)
+    set(slicer_PYTHON_REAL_EXECUTABLE ${python_DIR}/bin/python${Slicer_REQUIRED_PYTHON_VERSION_DOT})
   elseif(WIN32)
     set(slicer_PYTHON_SHARED_LIBRARY_DIR ${python_DIR}/bin)
     set(PYTHON_INCLUDE_DIR ${python_DIR}/include)
     set(PYTHON_LIBRARY ${python_DIR}/libs/python${Slicer_REQUIRED_PYTHON_VERSION_MAJOR}${Slicer_REQUIRED_PYTHON_VERSION_MINOR}.lib)
     set(PYTHON_EXECUTABLE ${python_DIR}/bin/PythonSlicer.exe)
-    set(slicer_PYTHON_REAL_EXECUTABLE ${python_DIR}/bin/python.exe)
+    set(slicer_PYTHON_REAL_EXECUTABLE ${python_DIR}/bin/python${Slicer_REQUIRED_PYTHON_VERSION_DOT}.exe)
   else()
     message(FATAL_ERROR "Unknown system !")
   endif()
 
-  if(NOT Slicer_USE_SYSTEM_python)
+  if(NOT Slicer_USE_SYSTEM_python OR Slicer_USE_SYSTEM_python)
     ExternalProject_Add_Step(${proj} configure_python_launcher
       COMMAND ${CMAKE_COMMAND}
         -DACTION:STRING=default
@@ -374,8 +397,6 @@ if((NOT DEFINED PYTHON_INCLUDE_DIR
     LABELS "ENVVARS_LAUNCHER_INSTALLED"
     )
 
-else()
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 
   # Extract python paths associated with current python interpreter
   # This is required to support the case when Slicer is built within
@@ -384,7 +405,7 @@ else()
   # to the virtual environment.
   set(python_cmd "import sys;print(';'.join(sys.path))")
   execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "${python_cmd}"
+    COMMAND ${slicer_PYTHON_REAL_EXECUTABLE} -c "${python_cmd}"
     RESULT_VARIABLE rv
     OUTPUT_VARIABLE ov
     ERROR_VARIABLE ev
@@ -411,8 +432,6 @@ else()
 
   # NA
 
-endif()
-
 mark_as_superbuild(
   VARS
     PYTHON_STDLIB_SUBDIR:STRING
@@ -429,12 +448,18 @@ mark_as_superbuild(
     PYTHON_EXECUTABLE:FILEPATH
     PYTHON_INCLUDE_DIR:PATH
     PYTHON_LIBRARY:FILEPATH
+    PYTHON_LIBRARIES:PATH
+    PYTHON_INCLUDE_DIRS:PATH
+    PYTHON_LIBRARY_DIRS:PATH
   LABELS "FIND_PACKAGE"
   )
 
 ExternalProject_Message(${proj} "PYTHON_EXECUTABLE:${PYTHON_EXECUTABLE}")
 ExternalProject_Message(${proj} "PYTHON_INCLUDE_DIR:${PYTHON_INCLUDE_DIR}")
 ExternalProject_Message(${proj} "PYTHON_LIBRARY:${PYTHON_LIBRARY}")
+ExternalProject_Message(${proj} "PYTHON_LIBRARIES:${PYTHON_LIBRARIES}")
+ExternalProject_Message(${proj} "PYTHON_INCLUDE_DIRS:${PYTHON_INCLUDE_DIRS}")
+ExternalProject_Message(${proj} "PYTHON_LIBRARY_DIRS:${PYTHON_LIBRARY_DIRS}")
 
 if(WIN32)
   set(PYTHON_DEBUG_LIBRARY ${PYTHON_LIBRARY})
@@ -449,6 +474,9 @@ set(Python3_LIBRARY ${PYTHON_LIBRARY})
 set(Python3_LIBRARY_DEBUG ${PYTHON_LIBRARY})
 set(Python3_LIBRARY_RELEASE ${PYTHON_LIBRARY})
 set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
+set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
+set(Python3_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS})
+set(Python3_LIBRARY_DIRS ${PYTHON_LIBRARY_DIRS})
 
 mark_as_superbuild(
   VARS
@@ -458,6 +486,9 @@ mark_as_superbuild(
     Python3_LIBRARY_DEBUG:FILEPATH
     Python3_LIBRARY_RELEASE:FILEPATH
     Python3_EXECUTABLE:FILEPATH
+    Python3_LIBRARIES:PATH
+    Python3_INCLUDE_DIRS:PATH
+    Python3_LIBRARY_DIRS:PATH
   LABELS "FIND_PACKAGE"
   )
 
@@ -467,6 +498,9 @@ ExternalProject_Message(${proj} "Python3_LIBRARY:${Python3_LIBRARY}")
 ExternalProject_Message(${proj} "Python3_LIBRARY_DEBUG:${Python3_LIBRARY_DEBUG}")
 ExternalProject_Message(${proj} "Python3_LIBRARY_RELEASE:${Python3_LIBRARY_RELEASE}")
 ExternalProject_Message(${proj} "Python3_EXECUTABLE:${Python3_EXECUTABLE}")
+ExternalProject_Message(${proj} "Python3_LIBRARIES:${Python3_LIBRARIES}")
+ExternalProject_Message(${proj} "Python3_INCLUDE_DIRS:${Python3_INCLUDE_DIRS}")
+ExternalProject_Message(${proj} "Python3_LIBRARY_DIRS:${Python3_LIBRARY_DIRS}")
 
 #!
 #! ExternalProject_PythonModule_InstallTreeCleanup(<proj> <modname> "[<dirname1>;[<dirname2>;[...]]]"))

@@ -25,6 +25,28 @@ endif()
 
 if(NOT DEFINED CTK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
+  set(_paths)
+  set(_links)
+
+  # Variables used to update PATH, LD_LIBRARY_PATH or DYLD_LIBRARY_PATH in env. script below
+  if(WIN32)
+    set(_varname "PATH")
+    set(_path_sep ";")
+  elseif(UNIX)
+    set(_path_sep ":")
+    if(APPLE)
+      set(_varname "DYLD_LIBRARY_PATH")
+    else()
+      set(_varname "LD_LIBRARY_PATH")
+    endif()
+  endif()
+
+  # Used below to both set the env. script and the launcher settings
+  set(_lib_subdir lib)
+  if(WIN32)
+    set(_lib_subdir bin)
+  endif()
+
   set(EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS)
 
     set(_wrap_qtwebkit 0)
@@ -49,13 +71,31 @@ if(NOT DEFINED CTK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DPython3_LIBRARY_RELEASE:FILEPATH=${Python3_LIBRARY_RELEASE}
       -DPython3_EXECUTABLE:FILEPATH=${Python3_EXECUTABLE}
       )
+
+    if (PythonQt_GIT_REPOSITORY)
+      list(APPEND EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
+        -DPythonQt_GIT_REPOSITORY:STRING=${PythonQt_GIT_REPOSITORY}
+        -DPythonQt_REVISION_TAG:STRING=${PythonQt_REVISION_TAG}
+        )
+    endif()
   endif()
 
   if(Slicer_BUILD_DICOM_SUPPORT)
     list(APPEND EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
       -DCTK_USE_SYSTEM_DCMTK:BOOL=${CTK_USE_SYSTEM_DCMTK}
       -DDCMTK_DIR:PATH=${DCMTK_DIR}
+      -DDCMTK_LIBRARIES:PATH=${_links}
       )
+
+    if(CMAKE_CONFIGURATION_TYPES)
+      foreach(config ${CMAKE_CONFIGURATION_TYPES})
+        list(APPEND _paths ${DCMTK_DIR}/${_lib_subdir}/${config})
+        list(APPEND _links " -L${DCMTK_DIR}/${_lib_subdir}/${config} ")
+      endforeach()
+    else()
+      list(APPEND _paths ${DCMTK_DIR}/${_lib_subdir})
+      list(APPEND _links " -L${DCMTK_DIR}/${_lib_subdir} ")
+    endif()
   endif()
 
     list(APPEND EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
@@ -78,12 +118,56 @@ if(NOT DEFINED CTK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
   set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj})
   set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
 
+  # environment
+  set(_env_script ${CMAKE_BINARY_DIR}/${proj}_Env.cmake)
+  #include(ExternalProjectForNonCMakeProject)
+  #ExternalProject_Write_SetBuildEnv_Commands(${_env_script})
+
+  file(APPEND ${_env_script}
+"#------------------------------------------------------------------------------
+# Added by '${CMAKE_CURRENT_LIST_FILE}'
+set(ENV{${_varname}} \"${_paths}${_path_sep}\$ENV{${_varname}}\")
+
+set(ENV{LDFLAGS} \"\$ENV{LDFLAGS} ${_links}\")
+")
+
+  # build step
+  set(_build_script ${CMAKE_BINARY_DIR}/${proj}_build_step.cmake)
+  file(WRITE ${_build_script}
+          "include(\"${_env_script}\")
+
+  if(\"\${MAKE_COMMAND}\" STREQUAL \"\")
+    message(FATAL_ERROR \"error: MAKE_COMMAND is not set !\")
+  endif()
+
+  execute_process(
+    COMMAND \$\{MAKE_COMMAND\}
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/${proj}-build\"
+    COMMAND_ERROR_IS_FATAL ANY
+  )
+")
+
+  set(CUSTOM_BUILD_COMMAND)
+  if(CMAKE_GENERATOR MATCHES ".*Makefiles.*")
+    # Use $(MAKE) as build command to propagate parallel make option
+    set(CUSTOM_BUILD_COMMAND BUILD_COMMAND "$(MAKE)")
+    set(make_command_definition -DMAKE_COMMAND=$(MAKE) )
+  else()
+    set(make_command_definition -DMAKE_COMMAND=${CMAKE_MAKE_PROGRAM})
+  endif()
+
+  set(CUSTOM_BUILD_COMMAND BUILD_COMMAND ${CMAKE_COMMAND}
+    ${make_command_definition}
+    -P ${_build_script})
+
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
     GIT_REPOSITORY "${Slicer_${proj}_GIT_REPOSITORY}"
     GIT_TAG "${Slicer_${proj}_GIT_TAG}"
     SOURCE_DIR ${EP_SOURCE_DIR}
     BINARY_DIR ${EP_BINARY_DIR}
+    ${CUSTOM_BUILD_COMMAND}
+    CMAKE_ARGS -Wno-dev --no-warn-unused-cli
     CMAKE_CACHE_ARGS
       -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
       -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
@@ -140,6 +224,8 @@ if(NOT DEFINED CTK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
           -id ${EP_BINARY_DIR}/CMakeExternals/Install/lib/libPythonQt.dylib
           ${EP_BINARY_DIR}/CMakeExternals/Install/lib/libPythonQt.dylib
         DEPENDEES build
+        DEPENDEES install
+        ALWAYS 1
         )
     endif()
   endif()

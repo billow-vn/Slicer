@@ -2,7 +2,7 @@
 # Find and install DCMTK Apps
 # -------------------------------------------------------------------------
 
-set(DCMTK_Apps storescu storescp dcmdump dump2dcm img2dcm dcmdjpeg dcmqrscp dcm2xml xml2dcm dsr2html dsr2xml xml2dsr dsrdump echoscu)
+set(DCMTK_Apps  cda2dcm dcm2json dcm2pdf dcm2xml dcmconv dcmcrle dcmdrle dcmdump dcmgpdir dcmodify dump2dcm img2dcm pdf2dcm stl2dcm xml2dcm dcm2pnm dcmicmp dcmquant dcmscale dcmdspfn dcod2lum dconvlum dcmcjpeg dcmdjpeg dcmj2pnm dcmmkdir dcmcjpls dcmdjpls dcml2pnm dcmrecv dcmsend echoscu findscu getscu movescu storescp storescu termscu dcmmkcrv dcmmklut dcmp2pgm dcmprscp dcmprscu dcmpschk dcmpsmk dcmpsprt dcmpsrcv dcmpssnd dcmqridx dcmqrscp dcmqrti drtdump dcmsign dsr2html dsr2xml dsrdump xml2dsr wlmscpfs )
 set(int_dir "")
 if(CMAKE_CONFIGURATION_TYPES)
   set(int_dir "Release/")

@@ -25,6 +25,31 @@ endif()
 
 if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
+  #-----------------------------------------------------------------------------
+  # Launcher setting specific to build tree
+  # Used below to both set the env. script and the launcher settings
+  set(_lib_subdir lib)
+  if(WIN32)
+    set(_lib_subdir bin)
+  endif()
+
+
+  set(_paths)
+  set(_links)
+
+  # Variables used to update PATH, LD_LIBRARY_PATH or DYLD_LIBRARY_PATH in env. script below
+  if(WIN32)
+    set(_varname "PATH")
+    set(_path_sep ";")
+  elseif(UNIX)
+    set(_path_sep ":")
+    if(APPLE)
+      set(_varname "DYLD_LIBRARY_PATH")
+    else()
+      set(_varname "LD_LIBRARY_PATH")
+    endif()
+  endif()
+
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_REPOSITORY
     "${EP_GIT_PROTOCOL}://github.com/Slicer/ITK"
@@ -74,6 +99,31 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     -DModule_ITKDeprecated:BOOL=ON #<-- Needed for ITKv5 now. (itkMultiThreader.h and MutexLock backwards compatibility.)
     )
 
+  # DCMTK
+  if(Slicer_BUILD_DICOM_SUPPORT)
+    if(CMAKE_CONFIGURATION_TYPES)
+      foreach(config ${CMAKE_CONFIGURATION_TYPES})
+        list(APPEND _paths ${DCMTK_DIR}/${_lib_subdir}/${config})
+        list(APPEND _links " -L${DCMTK_DIR}/${_lib_subdir}/${config} ")
+      endforeach()
+    else()
+      list(APPEND _paths ${DCMTK_DIR}/${_lib_subdir})
+      list(APPEND _links " -L${DCMTK_DIR}/${_lib_subdir} ")
+    endif()
+
+    list(APPEND EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
+            -DITK_USE_SYSTEM_DCMTK:BOOL=ON
+            -DDCMTK_DIR:PATH=${DCMTK_DIR}
+            -DDCMTK_LIBRARIES:PATH=${_links}
+            -DITKIODCMTK_SYSTEM_LIBRARY_DIRS:STRING=${_paths}
+            -DDICOM_SYSTEM_LIBRARY_DIRS:STRING=${_paths}
+    )
+
+  endif()
+
+  list(APPEND EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
+          -DModule_ITKIODCMTK:BOOL=${Slicer_BUILD_DICOM_SUPPORT}
+  )
 
   #Add additional user specified modules from this variable
   #Slicer_ITK_ADDITIONAL_MODULES
@@ -87,6 +137,52 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     endforeach()
   endif()
 
+  # environment
+  set(_env_script ${CMAKE_BINARY_DIR}/${proj}_Env.cmake)
+  include(ExternalProjectForNonCMakeProject)
+  ExternalProject_Write_SetBuildEnv_Commands(${_env_script})
+
+  file(APPEND ${_env_script}
+"#------------------------------------------------------------------------------
+# Added by '${CMAKE_CURRENT_LIST_FILE}'
+set(ENV{${_varname}} \"${_paths}${_path_sep}\$ENV{${_varname}}\")
+
+set(ENV{LDFLAGS} \"\$ENV{LDFLAGS} ${_links}\")
+
+
+message(STATUS \"--------------------------------------------------\")
+message(STATUS \"ENV = \$ENV{LDFLAGS} \")
+message(STATUS \"ENV{${_varname}} = \$ENV{${_varname}} \")
+message(STATUS \"--------------------------------------------------\")
+")
+
+  # build step
+  set(_build_script ${CMAKE_BINARY_DIR}/${proj}_build_step.cmake)
+  file(WRITE ${_build_script}
+          "include(\"${_env_script}\")
+
+  if(\"\${MAKE_COMMAND}\" STREQUAL \"\")
+    message(FATAL_ERROR \"error: MAKE_COMMAND is not set !\")
+  endif()
+
+  execute_process(
+    COMMAND \$\{MAKE_COMMAND\}
+    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/${proj}-build\"
+  )
+")
+
+  set(CUSTOM_BUILD_COMMAND)
+  if(CMAKE_GENERATOR MATCHES ".*Makefiles.*")
+    # Use $(MAKE) as build command to propagate parallel make option
+    set(CUSTOM_BUILD_COMMAND BUILD_COMMAND "$(MAKE)")
+    set(make_command_definition -DMAKE_COMMAND=$(MAKE) )
+  else()
+    set(make_command_definition -DMAKE_COMMAND=${CMAKE_MAKE_PROGRAM})
+  endif()
+
+  set(CUSTOM_BUILD_COMMAND BUILD_COMMAND ${CMAKE_COMMAND}
+    ${make_command_definition}
+    -P ${_build_script})
 
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
@@ -94,6 +190,7 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     GIT_TAG "${Slicer_${proj}_GIT_TAG}"
     SOURCE_DIR ${EP_SOURCE_DIR}
     BINARY_DIR ${EP_BINARY_DIR}
+    ${CUSTOM_BUILD_COMMAND}
     CMAKE_CACHE_ARGS
       -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
       -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
@@ -128,10 +225,6 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       # VTK
       -DModule_ITKVtkGlue:BOOL=ON
       -DVTK_DIR:PATH=${VTK_DIR}
-      # DCMTK
-      -DITK_USE_SYSTEM_DCMTK:BOOL=ON
-      -DDCMTK_DIR:PATH=${DCMTK_DIR}
-      -DModule_ITKIODCMTK:BOOL=${Slicer_BUILD_DICOM_SUPPORT}
       # ZLIB
       -DITK_USE_SYSTEM_ZLIB:BOOL=ON
       -DZLIB_ROOT:PATH=${ZLIB_ROOT}
@@ -151,14 +244,6 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
     set(ITK_VALGRIND_SUPPRESSIONS_FILE ${EP_SOURCE_DIR}/CMake/InsightValgrind.supp)
   endif()
   mark_as_superbuild(ITK_VALGRIND_SUPPRESSIONS_FILE:FILEPATH)
-
-  #-----------------------------------------------------------------------------
-  # Launcher setting specific to build tree
-
-  set(_lib_subdir lib)
-  if(WIN32)
-    set(_lib_subdir bin)
-  endif()
 
   # library paths
   set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD ${ITK_DIR}/${_lib_subdir}/<CMAKE_CFG_INTDIR>)

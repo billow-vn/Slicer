@@ -12,6 +12,7 @@ ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj
 
 if(Slicer_USE_SYSTEM_${proj})
   unset(OPENSSL_INCLUDE_DIR CACHE)
+  unset(OPENSSL_EXPORT_LIBRARY_DIR CACHE)
   if(UNIX)
     unset(OPENSSL_CRYPTO_LIBRARY CACHE)
     unset(OPENSSL_SSL_LIBRARY CACHE)
@@ -22,6 +23,9 @@ if(Slicer_USE_SYSTEM_${proj})
     unset(SSL_EAY_RELEASE CACHE)
   endif()
   find_package(OpenSSL REQUIRED)
+
+  set(OPENSSL_EXPORT_LIBRARY_DIR ${OPENSSL_ROOT_DIR})
+  set(OPENSSL_DOWNLOAD_VERSION  ${OPENSSL_VERSION})
 endif()
 
 
@@ -357,6 +361,9 @@ this version of visual studio [${MSVC_VERSION}]. You could either:
     ExternalProject_Message(${proj} "SSL_EAY_DEBUG:${SSL_EAY_DEBUG}")
     ExternalProject_Message(${proj} "SSL_EAY_RELEASE:${SSL_EAY_RELEASE}")
   endif()
+else()
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+endif()
 
   ExternalProject_GenerateProjectDescription_Step(${proj}
     VERSION ${OPENSSL_DOWNLOAD_VERSION}
@@ -375,9 +382,6 @@ this version of visual studio [${MSVC_VERSION}]. You could either:
   ExternalProject_Message(${proj} "OpenSSL ${OPENSSL_DOWNLOAD_VERSION}")
   ExternalProject_Message(${proj} "OPENSSL_LIBRARY_DIR:${OPENSSL_LIBRARY_DIR}")
   ExternalProject_Message(${proj} "OPENSSL_EXPORT_LIBRARY_DIR:${OPENSSL_EXPORT_LIBRARY_DIR}")
-else()
-  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
-endif()
 
 mark_as_superbuild(
   VARS OPENSSL_INCLUDE_DIR:PATH

@@ -19,7 +19,13 @@ if(WIN32)
       ${TBB_BIN_DIR}/tbbmalloc_proxy.dll
     DESTINATION bin COMPONENT Runtime)
 elseif(APPLE)
-  message(FATAL_ERROR "This CMake module does NOT support macOS")
+  foreach(file IN ITEMS
+          ${TBB_LIB_DIR}/libtbb.12.dylib
+          ${TBB_LIB_DIR}/libtbbmalloc.2.dylib
+          ${TBB_LIB_DIR}/libtbbmalloc_proxy.2.dylib
+  )
+    slicerInstallLibrary(FILE ${file} DESTINATION ${TBB_INSTALL_LIB_DIR} COMPONENT Runtime STRIP)
+  endforeach()
 elseif(UNIX)
   foreach(file IN ITEMS
     ${TBB_LIB_DIR}/libtbb.so.12

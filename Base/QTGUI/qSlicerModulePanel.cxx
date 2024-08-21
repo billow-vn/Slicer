@@ -56,7 +56,7 @@ qSlicerModulePanel::qSlicerModulePanel(QWidget* _parent, Qt::WindowFlags f)
 //---------------------------------------------------------------------------
 qSlicerModulePanel::~qSlicerModulePanel()
 {
-  this->setModule(QString());
+  this->removeAllModules();
 }
 
 //---------------------------------------------------------------------------
@@ -107,7 +107,7 @@ void qSlicerModulePanel::setModule(qSlicerAbstractCoreModule* module)
 {
   // Retrieve current module associated with the module panel
   qSlicerAbstractCoreModule* oldModule = this->currentModule();
-  if (module == oldModule)
+  if (module && oldModule && QString::compare(module->name(), oldModule->name(), Qt::CaseInsensitive) == 0)
   {
     return;
   }
@@ -251,7 +251,7 @@ void qSlicerModulePanel::removeModule(qSlicerAbstractCoreModule* module)
 //---------------------------------------------------------------------------
 void qSlicerModulePanel::removeAllModules()
 {
-  this->setModule("");
+  this->setModule(QString());
 }
 
 //---------------------------------------------------------------------------

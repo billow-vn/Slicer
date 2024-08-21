@@ -642,7 +642,7 @@ int vtkCacheManager::ClearCache()
     this->MarkNodesBeforeDeletingDataFromCache ( this->RemoteCacheDirectory.c_str() );
     vtksys::SystemTools::RemoveADirectory ( this->RemoteCacheDirectory.c_str() );
   }
-#if (VTK_MAJOR_VERSION >= 9 && VTK_MINOR_VERSION >= 0 && VTK_BUILD_VERSION >= 20210806)
+#if (VTK_MAJOR_VERSION >= 9 && VTK_MINOR_VERSION >= 0)
   if ( !vtksys::SystemTools::MakeDirectory ( this->RemoteCacheDirectory.c_str() ) )
 #else
   if ( vtksys::SystemTools::MakeDirectory ( this->RemoteCacheDirectory.c_str() ) == false )

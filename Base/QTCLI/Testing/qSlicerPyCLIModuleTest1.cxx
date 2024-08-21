@@ -102,7 +102,7 @@ int qSlicerPyCLIModuleTest1(int argc, char * argv[])
   // The PyCLI4Test module (PyCLIModule4Test) has already been installed as
   // a normal Python CLI module.
   // Slicer-build/lib/Slicer-X.Y/cli-modules[/Debug|Release]
-  QString cliModuleName("PyCLI4Test");
+  QString cliModuleName("PyCLI4ModuleTest");
 
   qSlicerApplication::setAttribute(qSlicerApplication::AA_DisablePython);
   qSlicerApplication app(argc, argv);

@@ -180,7 +180,7 @@ bool qSlicerCLILoadableModuleFactoryItem::resolveSymbols(ModuleDescription& desc
   char buffer[256];
   // The entry point address must be encoded the same way it is decoded. As it
   // is decoded using  sscanf, it must be encoded using sprintf
-  sprintf(buffer, "slicer:%p", moduleEntryPoint);
+  snprintf(buffer, 256, "slicer:%p", moduleEntryPoint);
   desc.SetTarget(std::string(buffer)); // EntryPoint
 
   ModuleLogo logo;

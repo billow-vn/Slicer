@@ -95,8 +95,9 @@ void vtkITKExecuteDataFromFileDiffusionTensor3D(
   //tensors->Modified();
   for ( it.GoToBegin(); !it.IsAtEnd() ; ++it )
   {
-    const itk::Index<3u> index = it.GetIndex();
-    vtkIdType position = data->FindPoint(index[0], index[1], index[2]);
+    const itk::Index<3> index = it.GetIndex();
+    double indexVal[3] = {(double )index[0], (double )index[1], (double )index[2]};
+    vtkIdType position = data->FindPoint(indexVal);
     if (position == static_cast<vtkIdType>(-1) ||
         position >= tensors->GetNumberOfTuples())
     {

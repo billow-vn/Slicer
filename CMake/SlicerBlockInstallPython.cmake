@@ -56,7 +56,6 @@ To create a Slicer package including python libraries, you can *NOT* provide you
 
   # Install python library
   if(UNIX)
-    if(NOT APPLE)
       slicerInstallLibrary(
         FILE ${PYTHON_LIBRARY}
         DESTINATION ${Slicer_INSTALL_ROOT}lib/Python/lib
@@ -72,7 +71,6 @@ To create a Slicer package including python libraries, you can *NOT* provide you
       slicerStripInstalledLibrary(
         FILES "${Slicer_INSTALL_ROOT}lib/Python/lib/${libname}"
         COMPONENT Runtime)
-    endif()
   elseif(WIN32)
     # Copy Python36.dll
     get_filename_component(PYTHON_LIB_BASE ${PYTHON_LIBRARY} NAME_WE)

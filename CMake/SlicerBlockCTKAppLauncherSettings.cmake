@@ -142,7 +142,7 @@ if(Slicer_USE_PYTHONQT_WITH_OPENSSL)
     "SSL_CERT_FILE=<APPLAUNCHER_SETTINGS_DIR>/${Slicer_SHARE_DIR}/Slicer.crt"
     )
 endif()
-if(UNIX AND NOT APPLE)
+if(UNIX)
   # Disable Chromium Sandboxing on Linux because not all systems support it
   # (see https://github.com/Slicer/Slicer/issues/6577)
   list(APPEND SLICER_ENVVARS_BUILD
@@ -284,7 +284,7 @@ if(Slicer_USE_PYTHONQT_WITH_OPENSSL)
     "SSL_CERT_FILE=<APPLAUNCHER_SETTINGS_DIR>/../${Slicer_SHARE_DIR}/Slicer.crt"
     )
 endif()
-if(UNIX AND NOT APPLE)
+if(UNIX)
   # Disable Chromium Sandboxing on Linux because not all systems support it
   # (see https://github.com/Slicer/Slicer/issues/6577)
   list(APPEND SLICER_ENVVARS_INSTALLED

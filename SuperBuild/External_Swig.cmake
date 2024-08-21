@@ -2,7 +2,15 @@
 set(proj Swig)
 
 if(Slicer_USE_SYSTEM_${proj})
-  message(FATAL_ERROR "Enabling Slicer_USE_SYSTEM_${proj} is not supported !")
+  #  message(FATAL_ERROR "Enabling Slicer_USE_SYSTEM_${proj} is not supported !")
+  unset(SWIG_DIR CACHE)
+  unset(SWIG_EXECUTABLE CACHE)
+  unset(SWIG_VERSION CACHE)
+  find_package(SWIG REQUIRED)
+  set(SWIG_EXECUTABLE ${SWIG_EXECUTABLE})
+  set(Swig_DIR ${SWIG_DIR})
+  set(SWIG_DIR ${SWIG_DIR})
+  set(SWIG_VERSION $ENV{SWIG_VERSION})
 endif()
 
 # Sanity checks
@@ -109,13 +117,16 @@ ExternalProject_Execute(${proj} \"configure\" sh ${EP_SOURCE_DIR}/configure
     set(SWIG_EXECUTABLE ${EP_INSTALL_DIR}/bin/swig)
     set(Swig_DEPEND Swig)
   endif()
-
-  ExternalProject_GenerateProjectDescription_Step(${proj}
-    VERSION ${SWIG_TARGET_VERSION}
-    )
-
-  mark_as_superbuild(
-    VARS SWIG_EXECUTABLE:FILEPATH
-    LABELS "FIND_PACKAGE"
-    )
+else()
+  ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
+  set(Swig_DEPEND Swig)
 endif()
+
+ExternalProject_GenerateProjectDescription_Step(${proj}
+        VERSION ${SWIG_TARGET_VERSION}
+)
+
+mark_as_superbuild(
+        VARS SWIG_EXECUTABLE:FILEPATH
+        LABELS "FIND_PACKAGE"
+)

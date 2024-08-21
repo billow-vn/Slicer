@@ -451,7 +451,7 @@ vtkSlicerCLIModuleLogic
   // pointer for uniqueness
   char tname[256];
 
-  sprintf(tname, "%p", scene);
+  snprintf(tname, 256, "%p", scene);
 
   fname = tname;
 
@@ -574,9 +574,10 @@ vtkSlicerCLIModuleLogic
 
       // Must be large enough to hold slicer:, #, an ascii
       // representation of the scene pointer and the MRML node ID.
-      char *tname = new char[name.size() + 100];
+      int lname = name.size() + 100;
+      char *tname = new char[lname];
 
-      sprintf(tname, "slicer:%p#%s", this->GetMRMLScene(), name.c_str());
+      snprintf(tname, lname, "slicer:%p#%s", this->GetMRMLScene(), name.c_str());
 
       fname = tname;
 
@@ -792,7 +793,7 @@ void vtkSlicerCLIModuleLogic
 //           char entryPointAsText[256];
 //           std::string entryPointAsString;
 //
-//           sprintf(entryPointAsText, "%p", entryPoint);
+//           snprintf(entryPointAsText, 256, "%p", entryPoint);
 //           entryPointAsString = std::string("slicer:") + entryPointAsText;
 //
 //           moduleDescriptionObject.SetTarget( entryPointAsString );
@@ -1241,7 +1242,7 @@ void vtkSlicerCLIModuleLogic::ApplyTask(void *clientdata)
     commandLineAsString.emplace_back("--processinformationaddress");
 
     char tname[256];
-    sprintf(tname, "%p", node0->GetModuleDescription().GetProcessInformation());
+    snprintf(tname, 256, "%p", node0->GetModuleDescription().GetProcessInformation());
 
     commandLineAsString.emplace_back(tname);
   }

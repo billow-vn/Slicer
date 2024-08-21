@@ -66,14 +66,18 @@ endif()
 if(Slicer_BUILD_QT_DESIGNER_PLUGINS)
   set(executablename "SlicerDesigner")
   set(build_designer_executable "${QT_BINARY_DIR}/designer${CMAKE_EXECUTABLE_SUFFIX}")
+  #[[
   if(APPLE)
     set(build_designer_executable "${QT_BINARY_DIR}/Designer.app/Contents/MacOS/designer")
   endif()
+  ]]
   set(installed_designer_executable "designer-real${CMAKE_EXECUTABLE_SUFFIX}")
   set(installed_designer_subdir ".")
   if(APPLE)
     set(installed_designer_executable "Designer")
+    #[[
     set(installed_designer_subdir "Designer.app/Contents/MacOS")
+    ]]
   endif()
   # Ensure directory exists at configuration time
   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/${Slicer_BIN_DIR})
@@ -164,6 +168,29 @@ if(NOT APPLE)
   include(${Slicer_CMAKE_DIR}/SlicerBlockInstallCMakeProjects.cmake)
 
 else()
+
+  if(NOT Slicer_USE_SYSTEM_QT)
+    include(${Slicer_CMAKE_DIR}/SlicerBlockInstallQt.cmake)
+  endif()
+
+  if(Slicer_BUILD_DICOM_SUPPORT AND NOT Slicer_USE_SYSTEM_DCMTK)
+    include(${Slicer_CMAKE_DIR}/SlicerBlockInstallDCMTKLibs.cmake)
+  endif()
+  if(Slicer_USE_PYTHONQT AND NOT Slicer_USE_SYSTEM_CTK)
+    include(${Slicer_CMAKE_DIR}/SlicerBlockInstallPythonQt.cmake)
+  endif()
+  if(Slicer_USE_PYTHONQT_WITH_OPENSSL AND NOT Slicer_USE_SYSTEM_OpenSSL)
+    include(${Slicer_CMAKE_DIR}/SlicerBlockInstallOpenSSL.cmake)
+  endif()
+  if(Slicer_USE_TBB AND NOT Slicer_USE_SYSTEM_TBB)
+    include(${Slicer_CMAKE_DIR}/SlicerBlockInstallTBB.cmake)
+  endif()
+
+  #[[
+  if(NOT Slicer_USE_SYSTEM_LibArchive)
+    include(${Slicer_CMAKE_DIR}/SlicerBlockInstallLibArchive.cmake)
+  endif()
+  ]]
 
   #------------------------------------------------------------------------------
   # macOS specific configuration used by the "fix-up" script

@@ -170,9 +170,9 @@ if(NOT license_found AND EXISTS \${SOURCE_DIR}/setup.py)
   set(license_found 1)
 endif()
 
-if(NOT license_found)
-  message(AUTHOR_WARNING \"${name}: Could not find a license file\")
-endif()
+# if(NOT license_found)
+#  message(AUTHOR_WARNING \"${name}: Could not find a license file\")
+# endif()
 ")
 
   ExternalProject_Add_Step(${projectname} generate_project_description
